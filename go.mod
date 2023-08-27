@@ -1,4 +1,4 @@
-module github.com/kallydev/trojanx
+module github.com/chwjbn/trojanx
 
 go 1.17
 

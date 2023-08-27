@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"github.com/kallydev/trojanx"
+	"github.com/chwjbn/trojanx"
 	"github.com/sirupsen/logrus"
 	"log"
 	"net"

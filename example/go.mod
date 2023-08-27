@@ -2,10 +2,10 @@ module simple
 
 go 1.17
 
-replace github.com/kallydev/trojanx => ../
+replace github.com/chwjbn/trojanx => ../
 
 require (
-	github.com/kallydev/trojanx v0.0.0-00010101000000-000000000000
+	github.com/chwjbn/trojanx v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.8.1
 )
 

@@ -2,7 +2,7 @@ package trojanx
 
 import (
 	"context"
-	"github.com/kallydev/trojanx/protocol"
+	"github.com/chwjbn/trojanx/protocol"
 	"github.com/sirupsen/logrus"
 	"net"
 )

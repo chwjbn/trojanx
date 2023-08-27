@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/kallydev/trojanx/internal/pool"
+	"github.com/chwjbn/trojanx/internal/pool"
 	"io"
 	"net"
 )
