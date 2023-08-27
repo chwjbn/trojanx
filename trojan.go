@@ -22,6 +22,7 @@ type Server struct {
 	ConnectHandler        ConnectHandler
 	AuthenticationHandler AuthenticationHandler
 	RequestHandler        RequestHandler
+	ForwardHandler        ForwardHandler
 	ErrorHandler          ErrorHandler
 	// TODO add a record callback handler
 }
@@ -62,10 +63,11 @@ func (s *Server) run() error {
 
 func (s *Server) handle(conn net.Conn) {
 	defer conn.Close()
-	// TODO Not used for now
+
 	ctx := metadata.NewContext(context.Background(), metadata.Metadata{
 		LocalAddr:  conn.LocalAddr(),
 		RemoteAddr: conn.RemoteAddr(),
+		SrcConn: conn,
 	})
 	if !s.ConnectHandler(ctx) {
 		return
@@ -75,6 +77,7 @@ func (s *Server) handle(conn net.Conn) {
 		s.ErrorHandler(ctx, err)
 		return
 	}
+
 	if !s.AuthenticationHandler(ctx, token) {
 		logrus.Debugln("authentication not passed", conn.RemoteAddr())
 		if s.config.ReverseProxyConfig == nil {
@@ -96,23 +99,25 @@ func (s *Server) handle(conn net.Conn) {
 		pipe.Copy(conn, dst)
 		return
 	}
+
+
+
 	req, err := protocol.ParseRequest(conn)
 	if err != nil {
 		s.ErrorHandler(ctx, err)
 		return
 	}
+
 	if req.Command == protocol.CommandUDP {
 		s.ErrorHandler(ctx, errors.New("unsupported udp protocol"))
 		return
 	}
-	dst, err := net.Dial("tcp", net.JoinHostPort(req.DescriptionAddress, strconv.Itoa(req.DescriptionPort)))
-	if err != nil {
-		s.ErrorHandler(ctx, err)
-		return
+
+
+    if s.ForwardHandler!=nil{
+    	s.ForwardHandler(ctx,token,*req)
 	}
-	defer dst.Close()
-	go pipe.Copy(dst, conn)
-	pipe.Copy(conn, dst)
+
 }
 
 func (s *Server) Run() error {
@@ -135,6 +140,7 @@ func New(ctx context.Context, config *Config) *Server {
 		ConnectHandler:        DefaultConnectHandler,
 		AuthenticationHandler: DefaultAuthenticationHandler,
 		RequestHandler:        DefaultRequestHandler,
+		ForwardHandler:        DefaultForwardHandler,
 		ErrorHandler:          DefaultErrorHandler,
 	}
 }

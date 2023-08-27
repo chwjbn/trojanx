@@ -2,16 +2,19 @@ package trojanx
 
 import (
 	"context"
+	"github.com/chwjbn/trojanx/internal/pipe"
+	"github.com/chwjbn/trojanx/metadata"
 	"github.com/chwjbn/trojanx/protocol"
 	"github.com/sirupsen/logrus"
 	"net"
+	"strconv"
 )
 
 type (
 	ConnectHandler        = func(ctx context.Context) bool
 	AuthenticationHandler = func(ctx context.Context, hash string) bool
 	RequestHandler        = func(ctx context.Context, request protocol.Request) bool
-	ForwardHandler        = func(ctx context.Context, upload, download int64) bool
+	ForwardHandler        = func(ctx context.Context, hash string, request protocol.Request) error
 	ErrorHandler          = func(ctx context.Context, err error)
 )
 
@@ -39,6 +42,22 @@ func DefaultRequestHandler(ctx context.Context, request protocol.Request) bool {
 		return false
 	}
 	return true
+}
+
+func DefaultForwardHandler(ctx context.Context, hash string, request protocol.Request) error  {
+
+	xMetadata:=metadata.FromContext(ctx)
+
+	dst, err := net.Dial("tcp", net.JoinHostPort(request.DescriptionAddress, strconv.Itoa(request.DescriptionPort)))
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	go pipe.Copy(dst, xMetadata.SrcConn)
+	pipe.Copy(xMetadata.SrcConn, dst)
+
+	return err
 }
 
 func DefaultErrorHandler(ctx context.Context, err error) {
